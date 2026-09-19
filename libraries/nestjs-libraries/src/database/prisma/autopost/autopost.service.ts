@@ -11,6 +11,10 @@ import { JSDOM } from 'jsdom';
 import { z } from 'zod';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
+import {
+  aiConfig,
+  structuredOutputMethod,
+} from '@gitroom/nestjs-libraries/openai/ai.config';
 import Parser from 'rss-parser';
 import { IntegrationService } from '@gitroom/nestjs-libraries/database/prisma/integrations/integration.service';
 import { makeId } from '@gitroom/nestjs-libraries/services/make.is';
@@ -36,14 +40,18 @@ interface WorkflowChannelsState {
 }
 
 const model = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-4.1',
+  apiKey: aiConfig.chat.apiKey,
+  model: aiConfig.chat.model,
   temperature: 0.7,
+  configuration: {
+    baseURL: aiConfig.chat.baseUrl,
+  },
 });
 
 const dalle = new DallEAPIWrapper({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'chatgpt-image-latest',
+  apiKey: aiConfig.image.apiKey,
+  model: aiConfig.image.model,
+  baseURL: aiConfig.image.baseUrl,
 });
 
 const generateContent = z.object({
@@ -215,7 +223,9 @@ export class AutopostService {
       };
     }
 
-    const structuredOutput = model.withStructuredOutput(generateContent);
+    const structuredOutput = model.withStructuredOutput(generateContent, {
+      method: structuredOutputMethod(),
+    });
     const { socialMediaPostContent } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets raw 'description' of a content and generate a social media post content.
@@ -242,7 +252,9 @@ export class AutopostService {
   }
 
   async generatePicture(state: WorkflowChannelsState) {
-    const structuredOutput = model.withStructuredOutput(dallePrompt);
+    const structuredOutput = model.withStructuredOutput(dallePrompt, {
+      method: structuredOutputMethod(),
+    });
     const { generatedTextToBeSentToDallE } =
       await ChatPromptTemplate.fromTemplate(
         `

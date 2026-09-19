@@ -16,6 +16,7 @@ import pLimit from 'p-limit';
 import { FalService } from '@gitroom/nestjs-libraries/openai/fal.service';
 import { IsString } from 'class-validator';
 import { JSONSchema } from 'class-validator-jsonschema';
+import { isChatConfigured } from '@gitroom/nestjs-libraries/openai/ai.config';
 const limit = pLimit(2);
 
 const transloadit = new Transloadit({
@@ -65,7 +66,7 @@ class ImagesSlidesParams {
     !!process.env.ELEVENSLABS_API_KEY &&
     !!process.env.TRANSLOADIT_AUTH &&
     !!process.env.TRANSLOADIT_SECRET &&
-    !!process.env.OPENAI_API_KEY &&
+    isChatConfigured() &&
     !!process.env.FAL_KEY,
 })
 export class ImagesSlides extends VideoAbstract<ImagesSlidesParams> {

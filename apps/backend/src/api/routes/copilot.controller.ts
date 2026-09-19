@@ -18,6 +18,10 @@ import { Organization } from '@prisma/client';
 import { SubscriptionService } from '@gitroom/nestjs-libraries/database/prisma/subscriptions/subscription.service';
 import { MastraAgent } from '@ag-ui/mastra';
 import { MastraService } from '@gitroom/nestjs-libraries/chat/mastra.service';
+import {
+  aiConfig,
+  isChatConfigured,
+} from '@gitroom/nestjs-libraries/openai/ai.config';
 import { Request, Response } from 'express';
 import { RequestContext } from '@mastra/core/di';
 import { CheckPolicies } from '@gitroom/backend/services/auth/permissions/permissions.ability';
@@ -47,11 +51,8 @@ export class CopilotController {
   ) {}
   @Post('/chat')
   chatAgent(@Req() req: Request, @Res() res: Response) {
-    if (
-      process.env.OPENAI_API_KEY === undefined ||
-      process.env.OPENAI_API_KEY === ''
-    ) {
-      Logger.warn('OpenAI API key not set, chat functionality will not work');
+    if (!isChatConfigured()) {
+      Logger.warn('AI provider API key not set, chat functionality will not work');
       return;
     }
 
@@ -60,7 +61,7 @@ export class CopilotController {
       cors: copilotCors(),
       runtime: new CopilotRuntime(),
       serviceAdapter: new OpenAIAdapter({
-        model: 'gpt-4.1',
+        model: aiConfig.chat.model,
       }),
     });
 
@@ -74,11 +75,8 @@ export class CopilotController {
     @Res() res: Response,
     @GetOrgFromRequest() organization: Organization
   ) {
-    if (
-      process.env.OPENAI_API_KEY === undefined ||
-      process.env.OPENAI_API_KEY === ''
-    ) {
-      Logger.warn('OpenAI API key not set, chat functionality will not work');
+    if (!isChatConfigured()) {
+      Logger.warn('AI provider API key not set, chat functionality will not work');
       return;
     }
     const mastra = await this._mastraService.mastra();
@@ -106,7 +104,7 @@ export class CopilotController {
       cors: copilotCors(),
       runtime,
       serviceAdapter: new OpenAIAdapter({
-        model: 'gpt-4.1',
+        model: aiConfig.chat.model,
       }),
     });
 

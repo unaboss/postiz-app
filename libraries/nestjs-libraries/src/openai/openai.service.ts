@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import { shuffle } from 'lodash';
-import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
+import { aiConfig } from '@gitroom/nestjs-libraries/openai/ai.config';
+import { chatParse } from '@gitroom/nestjs-libraries/openai/chat.parse';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
+  apiKey: aiConfig.chat.apiKey,
+  baseURL: aiConfig.chat.baseUrl,
+});
+
+const openaiImage = new OpenAI({
+  apiKey: aiConfig.image.apiKey,
+  baseURL: aiConfig.image.baseUrl,
 });
 
 const PicturePrompt = z.object({
@@ -39,10 +46,12 @@ export class OpenaiService {
     segments: { start: number; end: number; text: string }[],
     maxClips: number
   ) {
-    const { clips } = (
-      await openai.chat.completions.parse(
+    const { clips } =
+      (await chatParse(
+        openai,
+        ClipsPrompt,
+        'clipsPrompt',
         {
-          model: 'gpt-4.1',
           messages: [
             {
               role: 'system',
@@ -64,13 +73,11 @@ Clips must not overlap. Write the title and the post in this language, whatever 
                 .join('\n')}`,
             },
           ],
-          response_format: zodResponseFormat(ClipsPrompt, 'clipsPrompt'),
         },
         // shorter than the activity: an attempt that was given up on must not
         // still be running, and storing clips, when its retry gets there
         { timeout: 8 * 60 * 1000, maxRetries: 0 }
-      )
-    ).choices[0].message.parsed || { clips: [] };
+      )) || { clips: [] };
 
     return clips;
   }
@@ -79,9 +86,9 @@ Clips must not overlap. Write the title and the post in this language, whatever 
     // gpt-image models always return base64 (b64_json) and do not accept the
     // `response_format` parameter, unlike the deprecated dall-e-3.
     const generate = (
-      await openai.images.generate({
+      await openaiImage.images.generate({
         prompt,
-        model: 'chatgpt-image-latest',
+        model: aiConfig.image.model,
         size: isVertical ? '1024x1536' : '1024x1024',
       })
     ).data[0];
@@ -92,8 +99,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
   async generatePromptForPicture(prompt: string) {
     return (
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await chatParse(openai, PicturePrompt, 'picturePrompt', {
           messages: [
             {
               role: 'system',
@@ -104,17 +110,15 @@ Clips must not overlap. Write the title and the post in this language, whatever 
               content: `prompt: ${prompt}`,
             },
           ],
-          response_format: zodResponseFormat(PicturePrompt, 'picturePrompt'),
         })
-      ).choices[0].message.parsed?.prompt || ''
+      )?.prompt || ''
     );
   }
 
   async generateVoiceFromText(prompt: string) {
     return (
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await chatParse(openai, VoicePrompt, 'voice', {
           messages: [
             {
               role: 'system',
@@ -125,9 +129,8 @@ Clips must not overlap. Write the title and the post in this language, whatever 
               content: `prompt: ${prompt}`,
             },
           ],
-          response_format: zodResponseFormat(VoicePrompt, 'voice'),
         })
-      ).choices[0].message.parsed?.voice || ''
+      )?.voice || ''
     );
   }
 
@@ -148,7 +151,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: aiConfig.chat.model,
         }),
         openai.chat.completions.create({
           messages: [
@@ -164,7 +167,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
           ],
           n: 5,
           temperature: 1,
-          model: 'gpt-4.1',
+          model: aiConfig.chat.model,
         }),
       ])
     ).flatMap((p) => p.choices);
@@ -202,7 +205,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
           content,
         },
       ],
-      model: 'gpt-4.1',
+      model: aiConfig.chat.model,
     });
 
     const { content: articleContent } = websiteContent.choices[0].message;
@@ -221,8 +224,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
 
     const posts =
       (
-        await openai.chat.completions.parse({
-          model: 'gpt-4.1',
+        await chatParse(openai, SeparatePostsPrompt, 'separatePosts', {
           messages: [
             {
               role: 'system',
@@ -235,12 +237,8 @@ Clips must not overlap. Write the title and the post in this language, whatever 
               content: content,
             },
           ],
-          response_format: zodResponseFormat(
-            SeparatePostsPrompt,
-            'separatePosts'
-          ),
         })
-      ).choices[0].message.parsed?.posts || [];
+      )?.posts || [];
 
     return {
       posts: await Promise.all(
@@ -254,8 +252,7 @@ Clips must not overlap. Write the title and the post in this language, whatever 
             try {
               return (
                 (
-                  await openai.chat.completions.parse({
-                    model: 'gpt-4.1',
+                  await chatParse(openai, SeparatePostPrompt, 'separatePost', {
                     messages: [
                       {
                         role: 'system',
@@ -266,12 +263,8 @@ Clips must not overlap. Write the title and the post in this language, whatever 
                         content: post,
                       },
                     ],
-                    response_format: zodResponseFormat(
-                      SeparatePostPrompt,
-                      'separatePost'
-                    ),
                   })
-                ).choices[0].message.parsed?.post || ''
+                )?.post || ''
               );
             } catch (e) {
               retries--;
@@ -288,10 +281,20 @@ Clips must not overlap. Write the title and the post in this language, whatever 
     for (let i = 0; i < 3; i++) {
       try {
         const message = `You are an assistant that takes a text and break it into slides, each slide should have an image prompt and voice text to be later used to generate a video and voice, image prompt should capture the essence of the slide and also have a back dark gradient on top, image prompt should not contain text in the picture, generate between 3-5 slides maximum`;
+        const slidesSchema = z.object({
+          slides: z
+            .array(
+              z.object({
+                imagePrompt: z.string(),
+                voiceText: z.string(),
+              })
+            )
+            .describe('an array of slides'),
+        });
+
         const parse =
           (
-            await openai.chat.completions.parse({
-              model: 'gpt-4.1',
+            await chatParse(openai, slidesSchema, 'slides', {
               messages: [
                 {
                   role: 'system',
@@ -302,21 +305,8 @@ Clips must not overlap. Write the title and the post in this language, whatever 
                   content: text,
                 },
               ],
-              response_format: zodResponseFormat(
-                z.object({
-                  slides: z
-                    .array(
-                      z.object({
-                        imagePrompt: z.string(),
-                        voiceText: z.string(),
-                      })
-                    )
-                    .describe('an array of slides'),
-                }),
-                'slides'
-              ),
             })
-          ).choices[0].message.parsed?.slides || [];
+          )?.slides || [];
 
         return parse;
       } catch (err) {

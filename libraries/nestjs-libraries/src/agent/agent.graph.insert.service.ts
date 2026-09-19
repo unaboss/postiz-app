@@ -7,11 +7,18 @@ import { agentCategories } from '@gitroom/nestjs-libraries/agent/agent.categorie
 import { z } from 'zod';
 import { agentTopics } from '@gitroom/nestjs-libraries/agent/agent.topics';
 import { PostsService } from '@gitroom/nestjs-libraries/database/prisma/posts/posts.service';
+import {
+  aiConfig,
+  structuredOutputMethod,
+} from '@gitroom/nestjs-libraries/openai/ai.config';
 
 const model = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-4o-2024-08-06',
+  apiKey: aiConfig.chat.apiKey,
+  model: aiConfig.chat.model,
   temperature: 0,
+  configuration: {
+    baseURL: aiConfig.chat.baseUrl,
+  },
 });
 
 interface WorkflowChannelsState {
@@ -54,7 +61,9 @@ export class AgentGraphInsertService {
 
   async findCategory(state: WorkflowChannelsState) {
     const { messages } = state;
-    const structuredOutput = model.withStructuredOutput(category);
+    const structuredOutput = model.withStructuredOutput(category, {
+      method: structuredOutputMethod(),
+    });
     return ChatPromptTemplate.fromTemplate(
       `
 You are an assistant that get a social media post and categorize it into to one from the following categories:
@@ -72,7 +81,9 @@ Here is the post:
 
   findTopic(state: WorkflowChannelsState) {
     const { messages } = state;
-    const structuredOutput = model.withStructuredOutput(topic);
+    const structuredOutput = model.withStructuredOutput(topic, {
+      method: structuredOutputMethod(),
+    });
     return ChatPromptTemplate.fromTemplate(
       `
 You are an assistant that get a social media post and categorize it into one of the following topics:
@@ -90,7 +101,9 @@ Here is the post:
 
   findHook(state: WorkflowChannelsState) {
     const { messages } = state;
-    const structuredOutput = model.withStructuredOutput(hook);
+    const structuredOutput = model.withStructuredOutput(hook, {
+      method: structuredOutputMethod(),
+    });
     return ChatPromptTemplate.fromTemplate(
       `
 You are an assistant that get a social media post and extract the hook, the hook is usually the first or second of both sentence of the post, but can be in a different place, make sure you don't change the wording of the post use the exact text:

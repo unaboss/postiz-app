@@ -16,6 +16,10 @@ import { MediaService } from '@gitroom/nestjs-libraries/database/prisma/media/me
 import { UploadFactory } from '@gitroom/nestjs-libraries/upload/upload.factory';
 import { GeneratorDto } from '@gitroom/nestjs-libraries/dtos/generator/generator.dto';
 import { generationError } from '@gitroom/nestjs-libraries/openai/generation.error';
+import {
+  aiConfig,
+  structuredOutputMethod,
+} from '@gitroom/nestjs-libraries/openai/ai.config';
 
 const tools = !process.env.TAVILY_API_KEY
   ? []
@@ -23,14 +27,18 @@ const tools = !process.env.TAVILY_API_KEY
 const toolNode = new ToolNode(tools);
 
 const model = new ChatOpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'gpt-4.1',
+  apiKey: aiConfig.chat.apiKey,
+  model: aiConfig.chat.model,
   temperature: 0.7,
+  configuration: {
+    baseURL: aiConfig.chat.baseUrl,
+  },
 });
 
 const dalle = new DallEAPIWrapper({
-  apiKey: process.env.OPENAI_API_KEY || 'sk-proj-',
-  model: 'chatgpt-image-latest',
+  apiKey: aiConfig.image.apiKey,
+  model: aiConfig.image.model,
+  baseURL: aiConfig.image.baseUrl,
 });
 
 interface WorkflowChannelsState {
@@ -157,7 +165,9 @@ export class AgentGraphService {
 
   async findCategories(state: WorkflowChannelsState) {
     const allCategories = await this._postsService.findAllExistingCategories();
-    const structuredOutput = model.withStructuredOutput(category);
+    const structuredOutput = model.withStructuredOutput(category, {
+      method: structuredOutputMethod(),
+    });
     const { category: outputCategory } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets a text that will be later summarized into a social media post
@@ -184,7 +194,9 @@ export class AgentGraphService {
       return { topic: null };
     }
 
-    const structuredOutput = model.withStructuredOutput(topic);
+    const structuredOutput = model.withStructuredOutput(topic, {
+      method: structuredOutputMethod(),
+    });
     const { topic: outputTopic } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets a text that will be later summarized into a social media post
@@ -212,7 +224,9 @@ export class AgentGraphService {
   }
 
   async generateHook(state: WorkflowChannelsState) {
-    const structuredOutput = model.withStructuredOutput(hook);
+    const structuredOutput = model.withStructuredOutput(hook, {
+      method: structuredOutputMethod(),
+    });
     const { hook: outputHook } = await ChatPromptTemplate.fromTemplate(
       `
         You are an assistant that gets content for a social media post, and generate only the hook.
@@ -255,7 +269,8 @@ export class AgentGraphService {
 
   async generateContent(state: WorkflowChannelsState) {
     const structuredOutput = model.withStructuredOutput(
-      contentZod(!!state.isPicture, state.format)
+      contentZod(!!state.isPicture, state.format),
+      { method: structuredOutputMethod() }
     );
     const { content: outputContent } = await ChatPromptTemplate.fromTemplate(
       `
