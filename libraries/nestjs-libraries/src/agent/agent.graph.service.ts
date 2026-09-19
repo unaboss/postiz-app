@@ -38,7 +38,7 @@ const model = new ChatOpenAI({
 const dalle = new DallEAPIWrapper({
   apiKey: aiConfig.image.apiKey,
   model: aiConfig.image.model,
-  baseURL: aiConfig.image.baseUrl,
+  baseUrl: aiConfig.image.baseUrl,
 });
 
 interface WorkflowChannelsState {
