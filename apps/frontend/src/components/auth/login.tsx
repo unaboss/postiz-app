@@ -8,13 +8,6 @@ import { Input } from '@gitroom/react/form/input';
 import { useMemo, useState } from 'react';
 import { classValidatorResolver } from '@hookform/resolvers/class-validator';
 import { LoginUserDto } from '@gitroom/nestjs-libraries/dtos/auth/login.user.dto';
-import { GithubProvider } from '@gitroom/frontend/components/auth/providers/github.provider';
-import { OauthProvider } from '@gitroom/frontend/components/auth/providers/oauth.provider';
-import { GoogleProvider } from '@gitroom/frontend/components/auth/providers/google.provider';
-import { AppleProvider } from '@gitroom/frontend/components/auth/providers/apple.provider';
-import { useVariables } from '@gitroom/react/helpers/variable.context';
-import { FarcasterProvider } from '@gitroom/frontend/components/auth/providers/farcaster.provider';
-import WalletProvider from '@gitroom/frontend/components/auth/providers/wallet.provider';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 type Inputs = {
   email: string;
@@ -26,13 +19,6 @@ export function Login() {
   const t = useT();
   const [loading, setLoading] = useState(false);
   const [notActivated, setNotActivated] = useState(false);
-  const {
-    isGeneral,
-    neynarClientId,
-    appleClientId,
-    billingEnabled,
-    genericOauth,
-  } = useVariables();
   const resolver = useMemo(() => {
     return classValidatorResolver(LoginUserDto);
   }, []);
@@ -75,32 +61,8 @@ export function Login() {
               {t('sign_in', 'Sign In')}
             </h1>
           </div>
-          <div className="text-[14px] mt-[20px] mb-[12px]">
-            {t('continue_with', 'Continue With')}
-          </div>
-          <div className="flex flex-col">
-            {isGeneral && genericOauth ? (
-              <OauthProvider />
-            ) : !isGeneral ? (
-              <GithubProvider />
-            ) : (
-              <div className="gap-[8px] flex">
-                <GoogleProvider />
-                {!!appleClientId && <AppleProvider />}
-                {!!neynarClientId && <FarcasterProvider />}
-                {billingEnabled && <WalletProvider />}
-              </div>
-            )}
-            <div className="h-[20px] mb-[24px] mt-[24px] relative">
-              <div className="absolute w-full h-[1px] bg-fifth top-[50%] -translate-y-[50%]" />
-              <div
-                className={`absolute z-[1] justify-center items-center w-full start-0 -top-[4px] flex`}
-              >
-                <div className="px-[16px]">{t('or', 'or')}</div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-[12px]">
-              <div className="text-textColor">
+          <div className="flex flex-col gap-[12px] mt-[20px]">
+            <div className="text-textColor">
                 <Input
                   label="Email"
                   translationKey="label_email"
@@ -153,7 +115,6 @@ export function Login() {
                 </p>
               </div>
             </div>
-          </div>
         </div>
       </form>
     </FormProvider>
