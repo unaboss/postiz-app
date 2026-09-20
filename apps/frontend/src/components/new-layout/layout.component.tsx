@@ -97,7 +97,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
             <ContinueProvider />
             <div
               className={clsx(
-                'flex flex-col min-h-screen min-w-screen text-newTextColor p-[12px]',
+                'flex flex-col min-h-screen w-full overflow-x-hidden text-newTextColor p-[8px] sm:p-[12px]',
                 jakartaSans.className
               )}
             >
@@ -124,21 +124,27 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                       </div>
                     </div>
                     <div className="flex-1 bg-newBgLineColor rounded-[12px] overflow-hidden flex flex-col gap-[1px] blurMe">
-                      <div className="flex bg-newBgColorInner h-[80px] px-[20px] items-center">
-                        <div className="text-[24px] font-[600] flex flex-1">
+                      <div className="flex bg-newBgColorInner h-[60px] sm:h-[80px] px-[12px] sm:px-[20px] items-center">
+                        <div className="text-[18px] sm:text-[24px] font-[600] flex flex-1">
                           <Title />
                         </div>
-                        <div className="flex gap-[20px] text-textItemBlur">
-                          <StreakComponent />
-                          <div className="w-[1px] h-[20px] bg-blockSeparator" />
+                        <div className="flex gap-[12px] sm:gap-[20px] items-center text-textItemBlur">
+                          <div className="hidden md:block">
+                            <StreakComponent />
+                          </div>
+                          <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <OrganizationSelector />
                           <div className="hover:text-newTextColor">
                             <ModeComponent />
                           </div>
-                          <div className="w-[1px] h-[20px] bg-blockSeparator" />
-                          <ChromeExtensionComponent />
-                          <div className="w-[1px] h-[20px] bg-blockSeparator" />
-                          <AttachToFeedbackIcon />
+                          <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
+                          <div className="hidden md:block">
+                            <ChromeExtensionComponent />
+                          </div>
+                          <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
+                          <div className="hidden md:block">
+                            <AttachToFeedbackIcon />
+                          </div>
                           <NotificationComponent />
                         </div>
                       </div>
