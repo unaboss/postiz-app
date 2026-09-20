@@ -44,6 +44,8 @@ import { AttachToFeedbackIcon } from '@gitroom/frontend/components/new-layout/se
 import { FirstBillingComponent } from '@gitroom/frontend/components/billing/first.billing.component';
 import { TrialTracker } from '@gitroom/frontend/components/layout/gtm.component';
 import { setSentryUser } from '@gitroom/react/sentry/initialize.sentry.client';
+import { ChannelsProvider } from '@gitroom/frontend/components/layout/channels.context';
+import { ChannelDropdown } from '@gitroom/frontend/components/layout/channel.dropdown.component';
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ['600', '500', '700'],
@@ -86,6 +88,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         showDevConsole={false}
       >
         <MantineWrapper>
+          <ChannelsProvider>
           <ToolTip />
           <Toaster />
           <ForceDarkMode />
@@ -137,6 +140,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           </div>
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <OrganizationSelector />
+                          <ChannelDropdown />
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <div className="hidden md:block">
                             <ChromeExtensionComponent />
@@ -154,6 +158,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
               )}
             </div>
           </CheckPayment>
+          </ChannelsProvider>
         </MantineWrapper>
       </CopilotKit>
     </ContextWrapper>
