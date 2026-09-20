@@ -56,4 +56,15 @@ const ModeComponent = () => {
     </div>
   );
 };
+export const ForceDarkMode = () => {
+  const [, setMode] = useCookie('mode', 'dark');
+
+  useEffect(() => {
+    setMode('dark');
+    document.body.classList.remove('light');
+    document.body.classList.add('dark');
+  }, []);
+
+  return null;
+};
 export default ModeComponent;

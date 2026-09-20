@@ -1,5 +1,7 @@
 'use client';
 
+import { useAddProvider } from '@gitroom/frontend/components/launches/add.provider.component';
+
 export const Logo = () => {
   return (
     <svg
@@ -42,5 +44,21 @@ export const Logo = () => {
         strokeOpacity="0.9"
       />
     </svg>
+  );
+};
+
+export const AddChannelLogo = () => {
+  const addProvider = useAddProvider();
+
+  return (
+    <button
+      type="button"
+      onClick={addProvider}
+      title="Add Channel"
+      aria-label="Add Channel"
+      className="cursor-pointer"
+    >
+      <Logo />
+    </button>
   );
 };

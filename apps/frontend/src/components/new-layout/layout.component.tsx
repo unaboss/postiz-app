@@ -1,10 +1,13 @@
 'use client';
 
 import React, { ReactNode, useCallback, useEffect } from 'react';
-import { Logo } from '@gitroom/frontend/components/new-layout/logo';
+import { AddChannelLogo } from '@gitroom/frontend/components/new-layout/logo';
 import { Plus_Jakarta_Sans } from 'next/font/google';
-const ModeComponent = dynamic(
-  () => import('@gitroom/frontend/components/layout/mode.component'),
+const ForceDarkMode = dynamic(
+  () =>
+    import('@gitroom/frontend/components/layout/mode.component').then(
+      (mod) => mod.ForceDarkMode
+    ),
   {
     ssr: false,
   }
@@ -34,7 +37,6 @@ import { AnnouncementBanner } from '@gitroom/frontend/components/layout/announce
 import { Title } from '@gitroom/frontend/components/layout/title';
 import { TopMenu } from '@gitroom/frontend/components/layout/top.menu';
 import { ChromeExtensionComponent } from '@gitroom/frontend/components/layout/chrome.extension.component';
-import NotificationComponent from '@gitroom/frontend/components/notifications/notification.component';
 import { OrganizationSelector } from '@gitroom/frontend/components/layout/organization.selector';
 import { StreakComponent } from '@gitroom/frontend/components/layout/streak.component';
 import { PreConditionComponent } from '@gitroom/frontend/components/layout/pre-condition.component';
@@ -86,6 +88,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
         <MantineWrapper>
           <ToolTip />
           <Toaster />
+          <ForceDarkMode />
           <TrialTracker />
           <CheckPayment check={searchParams.get('check') || ''} mutate={mutate}>
             <ShowMediaBoxModal />
@@ -118,7 +121,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                         )}
                       >
                         <div className="flex flex-col h-full gap-[32px] flex-1 py-[12px]">
-                          <Logo />
+                          <AddChannelLogo />
                           <TopMenu />
                         </div>
                       </div>
@@ -134,9 +137,6 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           </div>
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <OrganizationSelector />
-                          <div className="hover:text-newTextColor">
-                            <ModeComponent />
-                          </div>
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <div className="hidden md:block">
                             <ChromeExtensionComponent />
@@ -145,7 +145,6 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           <div className="hidden md:block">
                             <AttachToFeedbackIcon />
                           </div>
-                          <NotificationComponent />
                         </div>
                       </div>
                       <div className="flex flex-1 gap-[1px]">{children}</div>
