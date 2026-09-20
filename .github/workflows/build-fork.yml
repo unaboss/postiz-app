@@ -34,7 +34,9 @@ jobs:
         with:
           context: .
           file: Dockerfile.dev
-          platforms: linux/amd64,linux/arm64
+          # amd64 only for fast iteration. For the Oracle ARM VM, set
+          # "linux/amd64,linux/arm64" (QEMU is already set up above).
+          platforms: linux/amd64
           push: true
           tags: |
             ghcr.io/unaboss/postiz-app:latest
