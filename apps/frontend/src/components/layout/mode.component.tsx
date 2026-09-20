@@ -56,7 +56,7 @@ const ModeComponent = () => {
     </div>
   );
 };
-export const ForceDarkMode = () => {
+export const ForceDarkMode = (): null => {
   const [, setMode] = useCookie('mode', 'dark');
 
   useEffect(() => {
