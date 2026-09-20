@@ -1,23 +1,35 @@
 import React, { useCallback } from 'react';
 import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import dayjs from 'dayjs';
-import { useCalendar } from '@gitroom/frontend/components/launches/calendar.context';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { SetSelectionModal } from '@gitroom/frontend/components/launches/calendar';
 import { AddEditModal } from '@gitroom/frontend/components/new-launch/add.edit.modal';
-import { ModalWrapperComponent } from '@gitroom/frontend/components/new-launch/modal.wrapper.component';
+import useSWR from 'swr';
+import { useChannels } from '@gitroom/frontend/components/layout/channels.context';
 
 export const NewPost = () => {
   const fetch = useFetch();
   const modal = useModals();
-  const { integrations, reloadCalendarView, sets } = useCalendar();
+  const { integrations } = useChannels();
+  const { data: sets } = useSWR(
+    'sets',
+    async () => (await fetch('/sets')).json(),
+    {
+      revalidateOnFocus: false,
+    }
+  );
   const t = useT();
+
+  const reloadCalendarView = useCallback(() => {
+    window.dispatchEvent(new Event('postiz:refresh-calendar'));
+  }, []);
 
   const createAPost = useCallback(async () => {
     const date = (await (await fetch('/posts/find-slot')).json()).date;
+    const setsList = sets || [];
 
-    const set: any = !sets.length
+    const set: any = !setsList.length
       ? undefined
       : await new Promise((resolve) => {
           modal.openModal({
@@ -31,7 +43,7 @@ export const NewPost = () => {
             },
             children: (
               <SetSelectionModal
-                sets={sets}
+                sets={setsList}
                 onSelect={(selectedSet) => {
                   resolve(selectedSet);
                   modal.closeAll();
@@ -74,10 +86,13 @@ export const NewPost = () => {
       title: ``,
     });
   }, [integrations, sets]);
+
   return (
     <button
       onClick={createAPost}
-      className="text-white flex-1 pt-[12px] pb-[14px] ps-[16px] pe-[20px] group-[.sidebar]:p-0 min-h-[44px] max-h-[44px] rounded-md bg-btnPrimary flex justify-center items-center gap-[5px] outline-none"
+      title={t('create_new_post', 'Create Post')}
+      aria-label={t('create_new_post', 'Create Post')}
+      className="text-white min-w-[36px] min-h-[36px] rounded-[8px] bg-btnPrimary flex justify-center items-center outline-none cursor-pointer"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -95,9 +110,6 @@ export const NewPost = () => {
           strokeLinejoin="round"
         />
       </svg>
-      <div className="flex-1 text-start text-[14px] group-[.sidebar]:hidden">
-        {t('create_new_post', 'Create Post')}
-      </div>
     </button>
   );
 };

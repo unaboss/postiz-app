@@ -331,6 +331,13 @@ export const CalendarWeekProvider: FC<{
     mutateList();
   }, [mutateCalendar, mutateList]);
 
+  useEffect(() => {
+    const handler = () => reloadCalendarView();
+    window.addEventListener('postiz:refresh-calendar', handler);
+    return () =>
+      window.removeEventListener('postiz:refresh-calendar', handler);
+  }, [reloadCalendarView]);
+
   // Determine loading state based on current view
   const loading = filters.display === 'list' ? listIsLoading : calendarIsLoading;
 

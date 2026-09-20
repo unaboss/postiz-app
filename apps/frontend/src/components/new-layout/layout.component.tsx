@@ -46,6 +46,7 @@ import { TrialTracker } from '@gitroom/frontend/components/layout/gtm.component'
 import { setSentryUser } from '@gitroom/react/sentry/initialize.sentry.client';
 import { ChannelsProvider } from '@gitroom/frontend/components/layout/channels.context';
 import { ChannelDropdown } from '@gitroom/frontend/components/layout/channel.dropdown.component';
+import { NewPost } from '@gitroom/frontend/components/launches/new.post';
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ['600', '500', '700'],
@@ -141,6 +142,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <OrganizationSelector />
                           <ChannelDropdown />
+                          <NewPost />
                           <div className="hidden md:block w-[1px] h-[20px] bg-blockSeparator" />
                           <div className="hidden md:block">
                             <ChromeExtensionComponent />

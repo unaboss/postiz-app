@@ -19,6 +19,7 @@ import {
   Integrations,
   useCalendar,
 } from '@gitroom/frontend/components/launches/calendar.context';
+import { useChannels } from '@gitroom/frontend/components/layout/channels.context';
 import { BotPicture } from '@gitroom/frontend/components/launches/bot.picture';
 import { CustomerModal } from '@gitroom/frontend/components/launches/customer.modal';
 import { Integration } from '@prisma/client';
@@ -61,7 +62,14 @@ export const Menu: FC<{
   const fetch = useFetch();
   const router = useRouter();
   const { extensionId } = useVariables();
-  const { integrations, reloadCalendarView } = useCalendar();
+  const { integrations: calendarIntegrations } = useCalendar();
+  const { integrations: channelIntegrations } = useChannels();
+  const integrations = channelIntegrations?.length
+    ? channelIntegrations
+    : calendarIntegrations;
+  const reloadCalendarView = useCallback(() => {
+    window.dispatchEvent(new Event('postiz:refresh-calendar'));
+  }, []);
   const toast = useToaster();
   const modal = useModals();
   const [show, setShow] = useState<false | { x: number; y: number }>(false);
