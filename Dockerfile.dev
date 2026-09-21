@@ -22,9 +22,13 @@ COPY . /app
 RUN pnpm install
 RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
 
+# Everything except node_modules, as a single archive. The runtime stage must
+# never contain the full dependency tree or the image keeps it in a layer.
+RUN tar -czf /tmp/app-src.tgz --exclude=node_modules --exclude=.git -C /app .
+
 ########## Stage 2 — runtime ##########
-# Only what the app needs to run: node, nginx, pnpm/pm2 and the built output
-# with production dependencies. No compilers, no dev dependencies.
+# node, nginx, pnpm/pm2, the source + build output, and *only* production
+# dependencies. No compilers, no dev dependencies, no full node_modules layer.
 FROM node:22.20-bookworm-slim AS runner
 
 ARG NEXT_PUBLIC_VERSION
@@ -44,12 +48,15 @@ RUN npm --no-update-notifier --no-fund --global install pnpm@10.6.1 pm2
 
 WORKDIR /app
 
-COPY --from=builder /app /app
-COPY var/docker/nginx.conf /etc/nginx/nginx.conf
+COPY --from=builder /tmp/app-src.tgz /tmp/app-src.tgz
+RUN tar -xzf /tmp/app-src.tgz -C /app && rm /tmp/app-src.tgz
 
-# Drop dev dependencies, then re-generate the Prisma client so it matches the
-# pruned tree. CI=true + confirmModulesPurge=false keep pnpm from blocking on
-# its "Proceed? (Y/n)" prompt inside a non-interactive build.
-RUN CI=true sh -c "pnpm prune --prod --config.confirmModulesPurge=false && pnpm run prisma-generate && npm cache clean --force"
+# Production dependencies only, then the Prisma client. CI=true keeps pnpm from
+# blocking on any interactive prompt inside the non-interactive build.
+RUN CI=true pnpm install --prod --frozen-lockfile \
+ && pnpm run prisma-generate \
+ && npm cache clean --force
+
+COPY var/docker/nginx.conf /etc/nginx/nginx.conf
 
 CMD ["sh", "-c", "nginx && pnpm run pm2"]
