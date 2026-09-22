@@ -822,3 +822,9 @@ html[dir='rtl'] [dir='ltr'] {
   text-shadow: -1px -1px 0 black, 1px -1px 0 black, -1px 1px 0 black,
     1px 1px 0 black;
 }
+
+// Shrink the main panel content only. The header title, page headings and the
+// left nav rail live outside .postiz-content, so they stay unchanged.
+.postiz-content {
+  zoom: 0.85;
+}

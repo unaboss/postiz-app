@@ -126,7 +126,7 @@ export const ThirdPartyListComponent: FC<{ reload: () => void }> = (props) => {
   );
 
   return (
-    <div className="grid grid-cols-4 gap-[10px] justify-items-center justify-center">
+    <div className="grid [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] gap-[10px]">
       {data?.map((p: any) => (
         <div
           onClick={addApiKey(p.title, p.identifier)}
@@ -139,8 +139,8 @@ export const ThirdPartyListComponent: FC<{ reload: () => void }> = (props) => {
               src={`/icons/third-party/${p.identifier}.png`}
             />
           </div>
-          <div className="whitespace-pre-wrap text-left text-lg">{p.title}</div>
-          <div className="whitespace-pre-wrap text-left">{p.description}</div>
+          <div className="whitespace-pre-wrap text-left text-[13px] font-[500]">{p.title}</div>
+          <div className="whitespace-pre-wrap text-left text-[11px]">{p.description}</div>
           <div className="w-full flex">
             <Button className="w-full">Add</Button>
           </div>

@@ -152,7 +152,7 @@ export const PlatformAnalytics = () => {
         <div>
           <img src="/peoplemarketplace.svg" />
         </div>
-        <div className="text-[48px]">
+        <div className="text-[16px] font-[500]">
           {t('can_t_show_analytics_yet', "Can't show analytics yet")}
           <br />
           {t(
@@ -160,7 +160,7 @@ export const PlatformAnalytics = () => {
             'You have to add Social Media channels'
           )}
         </div>
-        <div className="text-[20px]">
+        <div className="text-[13px]">
           {t('supported', 'Supported:')}
           {allowedIntegrations.map((p) => capitalize(p)).join(', ')}
         </div>

@@ -153,7 +153,7 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-1 gap-[1px]">{children}</div>
+                      <div className="postiz-content flex flex-1 gap-[1px]">{children}</div>
                     </div>
                   </div>
                 </>
